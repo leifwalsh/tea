@@ -3,8 +3,8 @@
 /// Implements the XTEA block cipher, whose reference source is public
 /// domain.  This code is also public domain.
 ///
-/// Also implements a CBC-mode stream cipher.  I'm not good at crypto
-/// so don't use this, and let me know if I'm using the wrong words.
+/// Also implements a CBC-mode block cipher with padding.  I'm not
+/// good at crypto so don't use this.
 
 /// A key is 128 bits.  We don't seem to need SIMD anywhere so it's
 /// just an array.
@@ -79,18 +79,18 @@ fn write_block(block: &Block) -> [u8; 8] {
     unsafe { mem::transmute(*block) }
 }
 
-/// Adapts encipher and decipher into a stream cipher using CBC.
-pub struct StreamCipher {
+/// Adapts encipher and decipher into a block cipher using CBC.
+pub struct BlockCipher {
     key: Key,
     prev: Block,
 }
 
-impl StreamCipher {
+impl BlockCipher {
 
-    /// Creates an XTEA StreamCipher with a key and an initialization
+    /// Creates an XTEA BlockCipher with a key and an initialization
     /// vector.
-    pub fn new(key: Key, iv: Block) -> StreamCipher {
-        StreamCipher{key: key, prev: iv}
+    pub fn new(key: Key, iv: Block) -> BlockCipher {
+        BlockCipher{key: key, prev: iv}
     }
 
     fn encrypt_chunk(&mut self, chunk: &[u8], output: &mut io::Write) {
@@ -172,7 +172,7 @@ fn tea_works() {
 
 #[test]
 fn cipher_works() {
-    let mut cipher = StreamCipher::new([123, 456, 789, 1011], [867, 5309]);
+    let mut cipher = BlockCipher::new([123, 456, 789, 1011], [867, 5309]);
     let input: Vec<u8> = (0u8..128).collect();
 
     let mut crypted_cursor: io::Cursor<Vec<u8>> = io::Cursor::new(Vec::new());
@@ -183,7 +183,7 @@ fn cipher_works() {
     assert!(input != crypted);
 
     // reset cipher iv
-    cipher = StreamCipher::new([123, 456, 789, 1011], [867, 5309]);
+    cipher = BlockCipher::new([123, 456, 789, 1011], [867, 5309]);
 
     let mut decrypted_cursor: io::Cursor<Vec<u8>> = io::Cursor::new(Vec::new());
     cipher.decrypt(&mut io::Cursor::new(crypted.clone()), &mut decrypted_cursor);
@@ -193,7 +193,7 @@ fn cipher_works() {
 
 #[test]
 fn cipher_padding() {
-    let mut cipher = StreamCipher::new([123, 456, 789, 1011], [867, 5309]);
+    let mut cipher = BlockCipher::new([123, 456, 789, 1011], [867, 5309]);
     let input: Vec<u8> = (0u8..123).collect();
 
     let mut crypted_cursor: io::Cursor<Vec<u8>> = io::Cursor::new(Vec::new());
@@ -204,7 +204,7 @@ fn cipher_padding() {
     assert!(input != crypted);
 
     // reset cipher iv
-    cipher = StreamCipher::new([123, 456, 789, 1011], [867, 5309]);
+    cipher = BlockCipher::new([123, 456, 789, 1011], [867, 5309]);
 
     let mut decrypted_cursor: io::Cursor<Vec<u8>> = io::Cursor::new(Vec::new());
     cipher.decrypt(&mut io::Cursor::new(crypted.clone()), &mut decrypted_cursor);
