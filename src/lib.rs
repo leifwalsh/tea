@@ -102,7 +102,8 @@ impl BlockCipher {
     }
 
     /// Reads bytes from `input` until it's consumed, and writes the
-    /// encrypted bytes to `output`.  Will pad to an 8-byte boundary.
+    /// encrypted bytes to `output`.  Will pad to an 8-byte boundary
+    /// with PKCS#7.
     pub fn encrypt(&mut self, input: &mut io::BufRead, output: &mut io::Write) {
         let mut consumed;
         loop {
@@ -139,8 +140,7 @@ impl BlockCipher {
     }
 
     /// Reads encrypted bytes from `input` until it's consumed, and
-    /// writes the decrypted bytes to `output`.  If the input needed
-    /// to be padded, the result will have trailing zeroes.
+    /// writes the decrypted bytes to `output`.
     pub fn decrypt(&mut self, input: &mut io::BufRead, output: &mut io::Write) {
         let mut last_chunk: [u8; 8] = [0u8; 8];
         let mut last_chunk_initialized = false;
