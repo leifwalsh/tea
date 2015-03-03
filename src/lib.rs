@@ -104,58 +104,73 @@ impl BlockCipher {
     /// Reads bytes from `input` until it's consumed, and writes the
     /// encrypted bytes to `output`.  Will pad to an 8-byte boundary.
     pub fn encrypt(&mut self, input: &mut io::BufRead, output: &mut io::Write) {
+        let mut consumed;
         loop {
-            let consumed = {
+            consumed = 0;
+            {
                 let bytes = input.fill_buf().ok().unwrap();
-                if bytes.len() == 0 {
+                if bytes.len() < 8 {
+                    let mut vec = bytes.to_vec();
+                    vec.resize(8, 8 - bytes.len() as u8);
+                    self.encrypt_chunk(&vec, output);
+                    consumed = bytes.len();
                     break;
                 }
                 for chunk in bytes.chunks(8) {
                     if chunk.len() < 8 {
-                        let mut vec = chunk.to_vec();
-                        vec.resize(8, 0u8);
-                        self.encrypt_chunk(&vec, output);
-                    } else {
-                        self.encrypt_chunk(&chunk, output);
+                        break;
                     }
+                    self.encrypt_chunk(&chunk, output);
+                    consumed += 8;
                 }
-                bytes.len()
-            };
+            }
             input.consume(consumed);
         }
+        input.consume(consumed);
     }
 
-    fn decrypt_chunk(&mut self, chunk: &[u8], output: &mut io::Write) {
+    fn decrypt_chunk(&mut self, chunk: &[u8]) -> [u8; 8] {
         let input_block: Block = read_block(chunk);
         let mut decrypted_block = decipher(&self.key, &input_block);
         decrypted_block[0] ^= self.prev[0];
         decrypted_block[1] ^= self.prev[1];
         self.prev = input_block;
-        output.write_all(&write_block(&decrypted_block)).ok().unwrap();
+        write_block(&decrypted_block)
     }
 
     /// Reads encrypted bytes from `input` until it's consumed, and
     /// writes the decrypted bytes to `output`.  If the input needed
     /// to be padded, the result will have trailing zeroes.
     pub fn decrypt(&mut self, input: &mut io::BufRead, output: &mut io::Write) {
+        let mut last_chunk: [u8; 8] = [0u8; 8];
+        let mut last_chunk_initialized = false;
         loop {
-            let consumed = {
+            let mut consumed = 0;
+            {
                 let bytes = input.fill_buf().ok().unwrap();
                 if bytes.len() == 0 {
                     break;
                 }
+                assert!(bytes.len() >= 8);
                 for chunk in bytes.chunks(8) {
                     if chunk.len() < 8 {
-                        let mut vec = chunk.to_vec();
-                        vec.resize(8, 0u8);
-                        self.decrypt_chunk(&vec, output);
-                    } else {
-                        self.decrypt_chunk(&chunk, output);
+                        break;
                     }
+                    if last_chunk_initialized {
+                        output.write_all(&last_chunk).ok().unwrap();
+                    }
+                    last_chunk = self.decrypt_chunk(&chunk);
+                    last_chunk_initialized = true;
+                    consumed += 8;
                 }
-                bytes.len()
             };
             input.consume(consumed);
+        }
+        if last_chunk_initialized {
+            let padded = last_chunk[7];
+            if padded < 8 {
+                output.write_all(&last_chunk[..(8 - padded) as usize]).ok().unwrap();
+            }
         }
     }
 
@@ -179,7 +194,7 @@ fn cipher_works() {
     cipher.encrypt(&mut io::Cursor::new(input.clone()), &mut crypted_cursor);
     let crypted = crypted_cursor.into_inner();
 
-    assert_eq!(input.len(), crypted.len());
+    assert_eq!(input.len() + 8, crypted.len());
     assert!(input != crypted);
 
     // reset cipher iv
@@ -200,7 +215,7 @@ fn cipher_padding() {
     cipher.encrypt(&mut io::Cursor::new(input.clone()), &mut crypted_cursor);
     let crypted = crypted_cursor.into_inner();
 
-    assert!(input.len() != crypted.len());
+    assert_eq!(input.len() + 5, crypted.len());
     assert!(input != crypted);
 
     // reset cipher iv
@@ -209,7 +224,5 @@ fn cipher_padding() {
     let mut decrypted_cursor: io::Cursor<Vec<u8>> = io::Cursor::new(Vec::new());
     cipher.decrypt(&mut io::Cursor::new(crypted.clone()), &mut decrypted_cursor);
     let decrypted = decrypted_cursor.into_inner();
-    let mut padded_input = input.clone();
-    padded_input.resize(128, 0u8);
-    assert_eq!(padded_input, decrypted);
+    assert_eq!(input, decrypted);
 }
