@@ -1,0 +1,5 @@
+[package]
+
+name = "tea"
+version = "0.0.1"
+authors = ["Leif Walsh <leif.walsh@gmail.com>"]
