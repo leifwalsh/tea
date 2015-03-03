@@ -52,11 +52,11 @@
 vector.</p>
 </div><h4 id='method.encrypt' class='method'><a class='stability Unmarked' title='No stability level'></a><code>fn <a href='#method.encrypt' class='fnname'>encrypt</a>(&amp;mut self, input: &amp;mut <a class='trait' href='http://doc.rust-lang.org/nightly/std/io/trait.BufRead.html' title='std::io::BufRead'>BufRead</a>, output: &amp;mut <a class='trait' href='http://doc.rust-lang.org/nightly/std/io/trait.Write.html' title='std::io::Write'>Write</a>)</code></h4>
 <div class='docblock'><p>Reads bytes from <code>input</code> until it&#39;s consumed, and writes the
-encrypted bytes to <code>output</code>.  Will pad to an 8-byte boundary.</p>
+encrypted bytes to <code>output</code>.  Will pad to an 8-byte boundary
+with PKCS#7.</p>
 </div><h4 id='method.decrypt' class='method'><a class='stability Unmarked' title='No stability level'></a><code>fn <a href='#method.decrypt' class='fnname'>decrypt</a>(&amp;mut self, input: &amp;mut <a class='trait' href='http://doc.rust-lang.org/nightly/std/io/trait.BufRead.html' title='std::io::BufRead'>BufRead</a>, output: &amp;mut <a class='trait' href='http://doc.rust-lang.org/nightly/std/io/trait.Write.html' title='std::io::Write'>Write</a>)</code></h4>
 <div class='docblock'><p>Reads encrypted bytes from <code>input</code> until it&#39;s consumed, and
-writes the decrypted bytes to <code>output</code>.  If the input needed
-to be padded, the result will have trailing zeroes.</p>
+writes the decrypted bytes to <code>output</code>.</p>
 </div></div></section>
     <section id='search' class="content hidden"></section>
 
