@@ -43,28 +43,29 @@
     <section id='main' class="content mod">
 <h1 class='fqn'><span class='in-band'>Crate <a class='mod' href=''>tea</a><wbr></span><span class='out-of-band'><a href='stability.html'>[stability]</a> <span id='render-detail'>
             <a id="collapse-all" href="#">[-]</a>&nbsp;<a id="expand-all" href="#">[+]</a>
-        </span><a id='src-0' href='../src/tea/lib.rs.html#1-228'>[src]</a></span></h1>
-<h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
+        </span><a id='src-0' href='../src/tea/lib.rs.html#1-19'>[src]</a></span></h1>
+<div class='docblock'><p>Implements the XTEA block cipher, whose reference source is public
+domain.  This code is also public domain.</p>
+
+<p>Also implements a CBC-mode block cipher with padding.  I&#39;m not
+good at crypto so don&#39;t use this.</p>
+</div><h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
 <table>
                     <tr>
-                        <td><a class='stability Unmarked' title='No stability level'></a><a class='struct' href='struct.BlockCipher.html'
-                               title='tea::BlockCipher'>BlockCipher</a></td>
-                        <td class='docblock short'><p>Adapts encipher and decipher into a block cipher using CBC.</p>
-</td>
-                    </tr>
-                </table><h2 id='functions' class='section-header'><a href="#functions">Functions</a></h2>
-<table>
-                    <tr>
-                        <td><a class='stability Unmarked' title='No stability level'></a><a class='fn' href='fn.decipher.html'
-                               title='tea::decipher'>decipher</a></td>
-                        <td class='docblock short'><p>Decrypts 64 bits of input using the key.</p>
+                        <td><a class='stability Unmarked' title='No stability level'></a><a class='mod' href='cipher/index.html'
+                               title='tea::cipher'>cipher</a></td>
+                        <td class='docblock short'><p>Implements the basic XTEA cipher routines as described in the
+paper (<a href="http://en.wikipedia.org/wiki/XTEA">http://en.wikipedia.org/wiki/XTEA</a>).  These functions only
+deal with a single 64-bit block of data at a time.</p>
 </td>
                     </tr>
                 
                     <tr>
-                        <td><a class='stability Unmarked' title='No stability level'></a><a class='fn' href='fn.encipher.html'
-                               title='tea::encipher'>encipher</a></td>
-                        <td class='docblock short'><p>Encrypts 64 bits of input using the key.</p>
+                        <td><a class='stability Unmarked' title='No stability level'></a><a class='mod' href='io/index.html'
+                               title='tea::io'>io</a></td>
+                        <td class='docblock short'><p>Bundles the <code>cipher</code> module into a CBC-mode block cipher, which
+wraps and implements the <code>std::io::Read</code> and <code>std::io::Write</code>
+interfaces.</p>
 </td>
                     </tr>
                 </table><h2 id='types' class='section-header'><a href="#types">Type Definitions</a></h2>
@@ -80,8 +81,8 @@ source, we use an array here too.</p>
                     <tr>
                         <td><a class='stability Unmarked' title='No stability level'></a><a class='type' href='type.Key.html'
                                title='tea::Key'>Key</a></td>
-                        <td class='docblock short'><p>Implements the XTEA block cipher, whose reference source is public
-domain.  This code is also public domain.</p>
+                        <td class='docblock short'><p>A key is 128 bits.  We don&#39;t seem to need SIMD anywhere so it&#39;s
+just an array.</p>
 </td>
                     </tr>
                 </table></section>

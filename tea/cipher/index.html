@@ -4,10 +4,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="rustdoc">
-    <meta name="description" content="Source to the Rust file `src/lib.rs`.">
-    <meta name="keywords" content="rust, rustlang, rust-lang">
+    <meta name="description" content="API documentation for the Rust `cipher` mod in crate `tea`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, cipher">
 
-    <title>lib.rs.html -- source</title>
+    <title>tea::cipher - Rust</title>
 
     <link rel="stylesheet" type="text/css" href="../../main.css">
 
@@ -26,7 +26,7 @@
 
     <section class="sidebar">
         
-        
+        <p class='location'><a href='../index.html'>tea</a></p><div class='block mod'><h2>Modules</h2><a class='mod current' href='../cipher/index.html' title='Implements the basic XTEA cipher routines as described in the paper (http://en.wikipedia.org/wiki/XTEA).  These functions only deal with a single 64-bit block of data at a time.'>cipher</a><a class='mod ' href='../io/index.html' title='Bundles the `cipher` module into a CBC-mode block cipher, which wraps and implements the `std::io::Read` and `std::io::Write` interfaces.'>io</a></div>
     </section>
 
     <nav class="sub">
@@ -40,47 +40,29 @@
         </form>
     </nav>
 
-    <section id='main' class="content source"><pre class="line-numbers"><span id="1"> 1</span>
-<span id="2"> 2</span>
-<span id="3"> 3</span>
-<span id="4"> 4</span>
-<span id="5"> 5</span>
-<span id="6"> 6</span>
-<span id="7"> 7</span>
-<span id="8"> 8</span>
-<span id="9"> 9</span>
-<span id="10">10</span>
-<span id="11">11</span>
-<span id="12">12</span>
-<span id="13">13</span>
-<span id="14">14</span>
-<span id="15">15</span>
-<span id="16">16</span>
-<span id="17">17</span>
-<span id="18">18</span>
-<span id="19">19</span>
-</pre><pre class='rust '>
-<span class='attribute'>#<span class='op'>!</span>[<span class='ident'>feature</span>(<span class='ident'>collections</span>,<span class='ident'>io</span>)]</span>
-
-<span class='doccomment'>//! Implements the XTEA block cipher, whose reference source is public</span>
-<span class='doccomment'>//! domain.  This code is also public domain.</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! Also implements a CBC-mode block cipher with padding.  I&#39;m not</span>
-<span class='doccomment'>//! good at crypto so don&#39;t use this.</span>
-
-<span class='doccomment'>/// A key is 128 bits.  We don&#39;t seem to need SIMD anywhere so it&#39;s</span>
-<span class='doccomment'>/// just an array.</span>
-<span class='kw'>pub</span> <span class='kw'>type</span> <span class='ident'>Key</span> <span class='op'>=</span> [<span class='ident'>u32</span>; <span class='number'>4</span>];
-
-<span class='doccomment'>/// XTEA uses 64-bit blocks; for simplicity and to match the reference</span>
-<span class='doccomment'>/// source, we use an array here too.</span>
-<span class='kw'>pub</span> <span class='kw'>type</span> <span class='ident'>Block</span> <span class='op'>=</span> [<span class='ident'>u32</span>; <span class='number'>2</span>];
-
-<span class='kw'>pub</span> <span class='kw'>mod</span> <span class='ident'>cipher</span>;
-<span class='kw'>pub</span> <span class='kw'>mod</span> <span class='ident'>io</span>;
-<span class='kw'>mod</span> <span class='ident'>mem</span>;
-</pre>
-</section>
+    <section id='main' class="content mod">
+<h1 class='fqn'><span class='in-band'>Module <a href='../index.html'>tea</a>::<wbr><a class='mod' href=''>cipher</a><wbr></span><span class='out-of-band'><span id='render-detail'>
+            <a id="collapse-all" href="#">[-]</a>&nbsp;<a id="expand-all" href="#">[+]</a>
+        </span><a id='src-14' href='../../src/tea/cipher.rs.html#1-61'>[src]</a></span></h1>
+<div class='docblock'><p>Implements the basic XTEA cipher routines as described in the
+paper (<a href="http://en.wikipedia.org/wiki/XTEA">http://en.wikipedia.org/wiki/XTEA</a>).  These functions only
+deal with a single 64-bit block of data at a time.</p>
+</div><h2 id='functions' class='section-header'><a href="#functions">Functions</a></h2>
+<table>
+                    <tr>
+                        <td><a class='stability Unmarked' title='No stability level'></a><a class='fn' href='fn.decipher.html'
+                               title='tea::cipher::decipher'>decipher</a></td>
+                        <td class='docblock short'><p>Decrypts 64 bits of <code>input</code> using the <code>key</code>.</p>
+</td>
+                    </tr>
+                
+                    <tr>
+                        <td><a class='stability Unmarked' title='No stability level'></a><a class='fn' href='fn.encipher.html'
+                               title='tea::cipher::encipher'>encipher</a></td>
+                        <td class='docblock short'><p>Encrypts 64 bits of <code>input</code> using the <code>key</code>.</p>
+</td>
+                    </tr>
+                </table></section>
     <section id='search' class="content hidden"></section>
 
     <section class="footer"></section>

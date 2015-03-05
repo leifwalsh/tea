@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `Writer` struct in crate `tea`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, Writer">
+
+    <title>tea::io::Writer - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <section class="sidebar">
+        
+        <p class='location'><a href='../index.html'>tea</a>::<wbr><a href='index.html'>io</a></p><div class='block struct'><h2>Structs</h2><a class='struct ' href='struct.Reader.html' title='Wraps an underlying `std::io::BufRead` so that bytes read get decrypted on the way through.'>Reader</a><a class='struct current' href='struct.Writer.html' title='Wraps an underlying `std::io::Write` so that bytes written get encrypted and passed through.  You must call `close()` when finished writing to append the padding bytes.'>Writer</a></div>
+    </section>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press 'S' to search, '?' for more options..."
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content struct">
+<h1 class='fqn'><span class='in-band'>Struct <a href='../index.html'>tea</a>::<wbr><a href='index.html'>io</a>::<wbr><a class='struct' href=''>Writer</a><wbr></span><span class='out-of-band'><span id='render-detail'>
+            <a id="collapse-all" href="#">[-]</a>&nbsp;<a id="expand-all" href="#">[+]</a>
+        </span><a id='src-846' href='../../src/tea/io/writer.rs.html#33-38'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct Writer&lt;W: <a class='trait' href='http://doc.rust-lang.org/nightly/std/io/trait.Write.html' title='std::io::Write'>Write</a>&gt; {
+    // some fields omitted
+}</pre><div class='docblock'><p>Wraps an underlying <code>std::io::Write</code> so that bytes written get
+encrypted and passed through.  You must call <code>close()</code> when
+finished writing to append the padding bytes.</p>
+
+<h1 id="example:" class='section-header'><a
+                           href="#example:">Example:</a></h1><pre id='rust-example-rendered' class='rust '>
+<span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>fs</span>::<span class='ident'>File</span>;
+<span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>io</span>::<span class='ident'>Write</span>;
+<span class='kw'>use</span> <span class='ident'>tea</span>::<span class='ident'>io</span>::<span class='ident'>Writer</span>;
+
+<span class='kw'>let</span> <span class='ident'>f</span> <span class='op'>=</span> <span class='ident'>File</span>::<span class='ident'>create</span>(<span class='string'>&quot;foo.txt&quot;</span>).<span class='ident'>ok</span>().<span class='ident'>unwrap</span>();
+<span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>crypt_f</span> <span class='op'>=</span> <span class='ident'>Writer</span>::<span class='ident'>new</span>(<span class='ident'>f</span>, [<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span>, <span class='number'>4</span>], [<span class='number'>5</span>, <span class='number'>6</span>]);
+<span class='ident'>crypt_f</span>.<span class='ident'>write_all</span>(<span class='string'>b&quot;Hello, world!&quot;</span>).<span class='ident'>ok</span>().<span class='ident'>unwrap</span>();
+<span class='ident'>crypt_f</span>.<span class='ident'>close</span>().<span class='ident'>ok</span>().<span class='ident'>unwrap</span>();
+</pre>
+</div><h2 id='methods'>Methods</h2><h3 class='impl'><a class='stability Unmarked' title='No stability level'></a><code>impl&lt;W: <a class='trait' href='http://doc.rust-lang.org/nightly/std/io/trait.Write.html' title='std::io::Write'>Write</a>&gt; <a class='struct' href='../../tea/io/struct.Writer.html' title='tea::io::Writer'>Writer</a>&lt;W&gt;</code></h3><div class='impl-items'><h4 id='method.new' class='method'><a class='stability Unmarked' title='No stability level'></a><code>fn <a href='#method.new' class='fnname'>new</a>(sink: W, key: <a class='type' href='../../tea/type.Key.html' title='tea::Key'>Key</a>, iv: <a class='type' href='../../tea/type.Block.html' title='tea::Block'>Block</a>) -&gt; <a class='struct' href='../../tea/io/struct.Writer.html' title='tea::io::Writer'>Writer</a>&lt;W&gt;</code></h4>
+<div class='docblock'><p>Wraps <code>sink</code> in a <code>Writer</code> that will encrypt with the given
+<code>key</code> and <code>iv</code> (initialization vector).</p>
+</div><h4 id='method.close' class='method'><a class='stability Unmarked' title='No stability level'></a><code>fn <a href='#method.close' class='fnname'>close</a>(self) -&gt; <a class='type' href='http://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;W&gt;</code></h4>
+<div class='docblock'><p>Writes the final padding bytes according to PKCS#7, destroys
+the encrypting wrapper, and returns the underlying
+<code>std::io::Write</code> object.</p>
+</div></div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><a class='stability Unstable' title='Unstable: this new I/O module is still under active development and APIs are subject to tweaks fairly regularly'></a><code>impl&lt;W: <a class='trait' href='http://doc.rust-lang.org/nightly/std/io/trait.Write.html' title='std::io::Write'>Write</a>&gt; <a class='trait' href='http://doc.rust-lang.org/nightly/std/io/trait.Write.html' title='std::io::Write'>Write</a> for <a class='struct' href='../../tea/io/struct.Writer.html' title='tea::io::Writer'>Writer</a>&lt;W&gt;</code></h3><div class='impl-items'><h4 id='method.write' class='method'><a class='stability Unstable' title='Unstable: this new I/O module is still under active development and APIs are subject to tweaks fairly regularly'></a><code>fn <a href='#method.write' class='fnname'>write</a>(&amp;mut self, buf: <a href='http://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;[</a><a href='http://doc.rust-lang.org/nightly/std/primitive.u8.html'>u8</a><a href='http://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a>) -&gt; <a class='type' href='http://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a href='http://doc.rust-lang.org/nightly/std/primitive.usize.html'>usize</a>&gt;</code></h4>
+<div class='docblock'><p>Encrypts the bytes in <code>buf</code> and passes them through to the
+underlying <code>std::io::Write</code>.  If there are not an exact
+multiple of 8 bytes available, the remaining ones will be
+cached until more data is written or the <code>Writer</code> is closed.</p>
+</div><h4 id='method.flush' class='method'><a class='stability Unstable' title='Unstable: this new I/O module is still under active development and APIs are subject to tweaks fairly regularly'></a><code>fn <a href='#method.flush' class='fnname'>flush</a>(&amp;mut self) -&gt; <a class='type' href='http://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a href='http://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></h4>
+<div class='docblock'><p>Passes the flush call through to the underlying
+<code>std::io::Write</code> object, but only if the internal buffer is
+clear.  If we have some cached bytes that are waiting for a
+full block before they can be encrypted, it is an error to try
+to call <code>flush()</code>.</p>
+</div><h4 id='method.write_all' class='tymethod'><a class='stability Unstable' title='Unstable: this new I/O module is still under active development and APIs are subject to tweaks fairly regularly'></a><code>fn <a href='#tymethod.write_all' class='fnname'>write_all</a>(&amp;mut self, buf: <a href='http://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;[</a><a href='http://doc.rust-lang.org/nightly/std/primitive.u8.html'>u8</a><a href='http://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a>) -&gt; <a class='enum' href='http://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a href='http://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>, <a class='struct' href='http://doc.rust-lang.org/nightly/std/io/error/struct.Error.html' title='std::io::error::Error'>Error</a>&gt;</code></h4>
+<h4 id='method.write_fmt' class='tymethod'><a class='stability Unstable' title='Unstable: this new I/O module is still under active development and APIs are subject to tweaks fairly regularly'></a><code>fn <a href='#tymethod.write_fmt' class='fnname'>write_fmt</a>(&amp;mut self, fmt: <a class='struct' href='http://doc.rust-lang.org/nightly/core/fmt/struct.Arguments.html' title='core::fmt::Arguments'>Arguments</a>) -&gt; <a class='enum' href='http://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a href='http://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>, <a class='struct' href='http://doc.rust-lang.org/nightly/std/io/error/struct.Error.html' title='std::io::error::Error'>Error</a>&gt;</code></h4>
+</div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <div id="help" class="hidden">
+        <div class="shortcuts">
+            <h1>Keyboard shortcuts</h1>
+            <dl>
+                <dt>?</dt>
+                <dd>Show this help dialog</dd>
+                <dt>S</dt>
+                <dd>Focus the search field</dd>
+                <dt>&larrb;</dt>
+                <dd>Move up in search results</dd>
+                <dt>&rarrb;</dt>
+                <dd>Move down in search results</dd>
+                <dt>&#9166;</dt>
+                <dd>Go to active search result</dd>
+            </dl>
+        </div>
+        <div class="infos">
+            <h1>Search tricks</h1>
+            <p>
+                Prefix searches with a type followed by a colon (e.g.
+                <code>fn:</code>) to restrict the search to a given type.
+            </p>
+            <p>
+                Accepted types are: <code>fn</code>, <code>mod</code>,
+                <code>struct</code>, <code>enum</code>,
+                <code>trait</code>, <code>typedef</code> (or
+                <code>tdef</code>).
+            </p>
+        </div>
+    </div>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "tea";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../../jquery.js"></script>
+    <script src="../../main.js"></script>
+    
+    <script async src="../../search-index.js"></script>
+</body>
+</html>

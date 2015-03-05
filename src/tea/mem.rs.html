@@ -4,10 +4,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="rustdoc">
-    <meta name="description" content="Source to the Rust file `src/lib.rs`.">
+    <meta name="description" content="Source to the Rust file `src/mem.rs`.">
     <meta name="keywords" content="rust, rustlang, rust-lang">
 
-    <title>lib.rs.html -- source</title>
+    <title>mem.rs.html -- source</title>
 
     <link rel="stylesheet" type="text/css" href="../../main.css">
 
@@ -56,29 +56,23 @@
 <span id="14">14</span>
 <span id="15">15</span>
 <span id="16">16</span>
-<span id="17">17</span>
-<span id="18">18</span>
-<span id="19">19</span>
 </pre><pre class='rust '>
-<span class='attribute'>#<span class='op'>!</span>[<span class='ident'>feature</span>(<span class='ident'>collections</span>,<span class='ident'>io</span>)]</span>
+<span class='doccomment'>//! Memory twiddling utilities, so far just for reinterpreting between</span>
+<span class='doccomment'>//! [u8] and Block.</span>
 
-<span class='doccomment'>//! Implements the XTEA block cipher, whose reference source is public</span>
-<span class='doccomment'>//! domain.  This code is also public domain.</span>
-<span class='doccomment'>//!</span>
-<span class='doccomment'>//! Also implements a CBC-mode block cipher with padding.  I&#39;m not</span>
-<span class='doccomment'>//! good at crypto so don&#39;t use this.</span>
+<span class='kw'>use</span> <span class='ident'>super</span>::<span class='ident'>Block</span>;
+<span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>mem</span>;
 
-<span class='doccomment'>/// A key is 128 bits.  We don&#39;t seem to need SIMD anywhere so it&#39;s</span>
-<span class='doccomment'>/// just an array.</span>
-<span class='kw'>pub</span> <span class='kw'>type</span> <span class='ident'>Key</span> <span class='op'>=</span> [<span class='ident'>u32</span>; <span class='number'>4</span>];
+<span class='doccomment'>/// Interprets an 8-byte `[u8]` array as a `Block`.</span>
+<span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>read_block</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span>(<span class='ident'>chunk</span>: <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> [<span class='ident'>u8</span>]) <span class='op'>-&gt;</span> <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>Block</span> {
+    <span class='macro'>debug_assert_eq</span><span class='macro'>!</span>(<span class='ident'>chunk</span>.<span class='ident'>len</span>(), <span class='number'>8</span>);
+    <span class='kw'>unsafe</span> { <span class='ident'>mem</span>::<span class='ident'>transmute</span>(<span class='ident'>chunk</span>.<span class='ident'>as_ptr</span>() <span class='kw'>as</span> <span class='op'>*</span><span class='kw'>const</span> [<span class='ident'>u8</span>; <span class='number'>8</span>]) }
+}
 
-<span class='doccomment'>/// XTEA uses 64-bit blocks; for simplicity and to match the reference</span>
-<span class='doccomment'>/// source, we use an array here too.</span>
-<span class='kw'>pub</span> <span class='kw'>type</span> <span class='ident'>Block</span> <span class='op'>=</span> [<span class='ident'>u32</span>; <span class='number'>2</span>];
-
-<span class='kw'>pub</span> <span class='kw'>mod</span> <span class='ident'>cipher</span>;
-<span class='kw'>pub</span> <span class='kw'>mod</span> <span class='ident'>io</span>;
-<span class='kw'>mod</span> <span class='ident'>mem</span>;
+<span class='doccomment'>/// Interprets a `Block` as an 8-byte `[u8]` array.</span>
+<span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>write_block</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span>(<span class='ident'>block</span>: <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>Block</span>) <span class='op'>-&gt;</span> <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> [<span class='ident'>u8</span>; <span class='number'>8</span>] {
+    <span class='kw'>unsafe</span> { <span class='ident'>mem</span>::<span class='ident'>transmute</span>(<span class='ident'>block</span>) }
+}
 </pre>
 </section>
     <section id='search' class="content hidden"></section>
