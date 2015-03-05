@@ -171,6 +171,8 @@
 <span id="129">129</span>
 <span id="130">130</span>
 <span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
 </pre><pre class='rust '>
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>io</span>;
 
@@ -286,22 +288,24 @@
     <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>io</span>::{<span class='ident'>Read</span>, <span class='ident'>Write</span>};
     <span class='kw'>use</span> <span class='ident'>super</span>::<span class='ident'>Writer</span>;
 
-    <span class='kw'>let</span> <span class='ident'>input</span>: <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>u8</span><span class='op'>&gt;</span> <span class='op'>=</span> (<span class='number'>0u8</span>..<span class='number'>128</span>).<span class='ident'>collect</span>();
-    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>writer</span> <span class='op'>=</span> <span class='ident'>Writer</span>::<span class='ident'>new</span>(<span class='ident'>io</span>::<span class='ident'>Cursor</span>::<span class='ident'>new</span>(<span class='ident'>Vec</span>::<span class='ident'>with_capacity</span>(<span class='number'>128</span>)),
-                                 [<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span>, <span class='number'>4</span>], [<span class='number'>5</span>, <span class='number'>6</span>]);
-    <span class='kw'>for</span> <span class='ident'>chunk</span> <span class='kw'>in</span> <span class='ident'>input</span>.<span class='ident'>chunks</span>(<span class='number'>16</span>) {
-        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>writer</span>.<span class='ident'>write</span>(<span class='ident'>chunk</span>).<span class='ident'>ok</span>().<span class='ident'>unwrap</span>(), <span class='number'>16</span>);
+    <span class='kw'>for</span> <span class='ident'>chunk_size</span> <span class='kw'>in</span> <span class='number'>1</span>..<span class='number'>65</span> {
+        <span class='kw'>let</span> <span class='ident'>input</span>: <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>u8</span><span class='op'>&gt;</span> <span class='op'>=</span> (<span class='number'>0u8</span>..<span class='number'>128</span>).<span class='ident'>collect</span>();
+        <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>writer</span> <span class='op'>=</span> <span class='ident'>Writer</span>::<span class='ident'>new</span>(<span class='ident'>io</span>::<span class='ident'>Cursor</span>::<span class='ident'>new</span>(<span class='ident'>Vec</span>::<span class='ident'>with_capacity</span>(<span class='number'>128</span>)),
+                                     [<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span>, <span class='number'>4</span>], [<span class='number'>5</span>, <span class='number'>6</span>]);
+        <span class='kw'>for</span> <span class='ident'>chunk</span> <span class='kw'>in</span> <span class='ident'>input</span>.<span class='ident'>chunks</span>(<span class='ident'>chunk_size</span>) {
+            <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>writer</span>.<span class='ident'>write</span>(<span class='ident'>chunk</span>).<span class='ident'>ok</span>().<span class='ident'>unwrap</span>(), <span class='ident'>chunk</span>.<span class='ident'>len</span>());
+        }
+
+        <span class='kw'>let</span> <span class='ident'>crypted</span> <span class='op'>=</span> <span class='ident'>writer</span>.<span class='ident'>close</span>().<span class='ident'>ok</span>().<span class='ident'>unwrap</span>().<span class='ident'>into_inner</span>();
+        <span class='macro'>assert</span><span class='macro'>!</span>(<span class='ident'>crypted</span>.<span class='ident'>len</span>() <span class='op'>==</span> <span class='ident'>input</span>.<span class='ident'>len</span>() <span class='op'>+</span> <span class='number'>8</span>);
+        <span class='macro'>assert</span><span class='macro'>!</span>(<span class='ident'>crypted</span> <span class='op'>!=</span> <span class='ident'>input</span>);
+
+        <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>reader</span> <span class='op'>=</span> <span class='ident'>Reader</span>::<span class='ident'>new</span>(<span class='ident'>io</span>::<span class='ident'>Cursor</span>::<span class='ident'>new</span>(<span class='ident'>crypted</span>),
+                                     [<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span>, <span class='number'>4</span>], [<span class='number'>5</span>, <span class='number'>6</span>]);
+        <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>decrypted</span>: <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>u8</span><span class='op'>&gt;</span> <span class='op'>=</span> <span class='ident'>Vec</span>::<span class='ident'>new</span>();
+        <span class='macro'>assert</span><span class='macro'>!</span>(<span class='ident'>reader</span>.<span class='ident'>read_to_end</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>decrypted</span>).<span class='ident'>is_ok</span>());
+        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>decrypted</span>, <span class='ident'>input</span>);
     }
-
-    <span class='kw'>let</span> <span class='ident'>crypted</span> <span class='op'>=</span> <span class='ident'>writer</span>.<span class='ident'>close</span>().<span class='ident'>ok</span>().<span class='ident'>unwrap</span>().<span class='ident'>into_inner</span>();
-    <span class='macro'>assert</span><span class='macro'>!</span>(<span class='ident'>crypted</span>.<span class='ident'>len</span>() <span class='op'>==</span> <span class='ident'>input</span>.<span class='ident'>len</span>() <span class='op'>+</span> <span class='number'>8</span>);
-    <span class='macro'>assert</span><span class='macro'>!</span>(<span class='ident'>crypted</span> <span class='op'>!=</span> <span class='ident'>input</span>);
-
-    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>reader</span> <span class='op'>=</span> <span class='ident'>Reader</span>::<span class='ident'>new</span>(<span class='ident'>io</span>::<span class='ident'>Cursor</span>::<span class='ident'>new</span>(<span class='ident'>crypted</span>),
-                                 [<span class='number'>1</span>, <span class='number'>2</span>, <span class='number'>3</span>, <span class='number'>4</span>], [<span class='number'>5</span>, <span class='number'>6</span>]);
-    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>decrypted</span>: <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>u8</span><span class='op'>&gt;</span> <span class='op'>=</span> <span class='ident'>Vec</span>::<span class='ident'>new</span>();
-    <span class='macro'>assert</span><span class='macro'>!</span>(<span class='ident'>reader</span>.<span class='ident'>read_to_end</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>decrypted</span>).<span class='ident'>is_ok</span>());
-    <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>decrypted</span>, <span class='ident'>input</span>);
 }
 </pre>
 </section>
