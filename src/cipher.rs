@@ -21,9 +21,9 @@ pub fn encipher(key: &Key, input: &Block) -> Block {
     let delta = 0x9E3779B9;
     let mut sum: u32 = 0;
     for _ in 0..NUM_ROUNDS {
-        v0 += (((v1 << 4) ^ (v1 >> 5)) + v1) ^ (sum + key[(sum & 3) as usize]);
-        sum += delta;
-        v1 += (((v0 << 4) ^ (v0 >> 5)) + v0) ^ (sum + key[((sum>>11) & 3) as usize])
+        v0 = v0.wrapping_add((((v1 << 4) ^ (v1 >> 5)).wrapping_add(v1)) ^ (sum.wrapping_add(key[(sum & 3) as usize])));
+        sum = sum.wrapping_add(delta);
+        v1 = v1.wrapping_add((((v0 << 4) ^ (v0 >> 5)).wrapping_add(v0)) ^ (sum.wrapping_add(key[((sum>>11) & 3) as usize])))
     }
     [v0, v1]
 }
@@ -42,11 +42,11 @@ pub fn encipher(key: &Key, input: &Block) -> Block {
 pub fn decipher(key: &Key, input: &Block) -> Block {
     let [mut v0, mut v1] = *input;
     let delta = 0x9E3779B9;
-    let mut sum = delta * NUM_ROUNDS;
+    let mut sum = delta.wrapping_mul(NUM_ROUNDS);
     for _ in 0..NUM_ROUNDS {
-        v1 -= (((v0 << 4) ^ (v0 >> 5)) + v0) ^ (sum + key[((sum>>11) & 3) as usize]);
-        sum -= delta;
-        v0 -= (((v1 << 4) ^ (v1 >> 5)) + v1) ^ (sum + key[(sum & 3) as usize]);
+        v1 = v1.wrapping_sub((((v0 << 4) ^ (v0 >> 5)).wrapping_add(v0)) ^ (sum.wrapping_add(key[((sum>>11) & 3) as usize])));
+        sum = sum.wrapping_sub(delta);
+        v0 = v0.wrapping_sub((((v1 << 4) ^ (v1 >> 5)).wrapping_add(v1)) ^ (sum.wrapping_add(key[(sum & 3) as usize])));
     }
     [v0, v1]
 }
