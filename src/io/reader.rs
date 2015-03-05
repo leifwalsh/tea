@@ -63,18 +63,22 @@ impl<R: io::BufRead> io::Read for Reader<R> {
                     if !self.buf.is_empty() {
                         // Handle padding bytes.
                         let real_bytes = self.buf.len() - self.buf[self.buf.len()-1] as usize;
-                        if buf.len() - pos >= real_bytes {
-                            for b in self.buf.drain().take(real_bytes) {
-                                buf[pos] = b;
-                                pos += 1;
-                            }
+
+                        // Weird scoping follows.  We want to discard
+                        // the lifetime where real_slice is borrowing
+                        // from self.buf so we can truncate it, but we
+                        // still want to know what n is, so we have to
+                        // let that value escape.
+                        let n = {
+                            let real_slice = &self.buf[..real_bytes];
+                            let n2 = buf[pos..].clone_from_slice(real_slice);
+                            pos += n2;
+                            n2
+                        };
+                        if n == real_bytes {
+                            self.buf.truncate(0);
                         } else {
-                            let rem = self.buf.split_off(buf.len() - pos);
-                            for b in self.buf.drain() {
-                                buf[pos] = b;
-                                pos += 1;
-                            }
-                            self.buf = rem;
+                            self.buf = self.buf.split_off(n);
                         }
                     }
                     return Ok(pos);
@@ -83,18 +87,12 @@ impl<R: io::BufRead> io::Read for Reader<R> {
                             "not enough bytes to decrypt, encrypted data should be a multiple of 8 bytes but we got {}", encrypted_bytes.len());
 
                     if !self.buf.is_empty() {
-                        if buf.len() - pos >= self.buf.len() {
-                            for b in self.buf.drain() {
-                                buf[pos] = b;
-                                pos += 1;
-                            }
+                        let n = buf[pos..].clone_from_slice(&self.buf);
+                        pos += n;
+                        if n == self.buf.len() {
+                            self.buf.truncate(0);
                         } else {
-                            let rem = self.buf.split_off(buf.len() - pos);
-                            for b in self.buf.drain() {
-                                buf[pos] = b;
-                                pos += 1;
-                            }
-                            self.buf = rem;
+                            self.buf = self.buf.split_off(n);
                             return Ok(pos);
                         }
                     }

@@ -56,6 +56,12 @@ impl<W: io::Write> Writer<W> {
     /// the encrypting wrapper, and returns the underlying
     /// `std::io::Write` object.
     pub fn close(mut self) -> io::Result<W> {
+        if !try!(self.flush_enc_buf()) {
+            return Err(io::Error::new(io::ErrorKind::Other, "couldn't flush encrypted bytes to sink",
+                                      Some(format!("sink couldn't write the last {} bytes that were already encoded", self.enc_buf.len()))));
+        }
+        self.enc_buf.truncate(0);
+
         let pad_byte = 8 - self.buf.len() as u8;
         self.buf.resize(8, pad_byte);
         let written = try!(self.sink.write(encrypt_chunk(&self.key, &mut self.prev, &self.buf)));
@@ -68,6 +74,20 @@ impl<W: io::Write> Writer<W> {
         Ok(self.sink)
     }
 
+    // Flushes the buffer of encrypted data.  Returns Ok(true) if
+    // everything's ok, Ok(false) if we couldn't write everything and
+    // should stop.
+    fn flush_enc_buf(&mut self) -> io::Result<bool> {
+        let n = try!(self.sink.write(&self.enc_buf));
+        if n < self.enc_buf.len() {
+            let rest = self.enc_buf.split_off(n);
+            self.enc_buf = rest;
+            Ok(false)
+        } else {
+            self.enc_buf.truncate(0);
+            Ok(true)
+        }
+    }
 }
 
 impl<W: io::Write> io::Write for Writer<W> {
@@ -78,13 +98,8 @@ impl<W: io::Write> io::Write for Writer<W> {
     /// cached until more data is written or the `Writer` is closed.
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         if !self.enc_buf.is_empty() {
-            let n = try!(self.sink.write(&self.enc_buf));
-            if n < self.enc_buf.len() {
-                let rest = self.enc_buf.split_off(n);
-                self.enc_buf = rest;
+            if !try!(self.flush_enc_buf()) {
                 return Ok(0);
-            } else {
-                self.enc_buf.truncate(0);
             }
         }
 
@@ -102,13 +117,8 @@ impl<W: io::Write> io::Write for Writer<W> {
             self.enc_buf.push_all(encrypt_chunk(&self.key, &mut self.prev, &self.buf));
             self.buf.truncate(0);
 
-            let n = try!(self.sink.write(&self.enc_buf));
-            if n < 8 {
-                let rest = self.enc_buf.split_off(n);
-                self.enc_buf = rest;
+            if !try!(self.flush_enc_buf()) {
                 return Ok(written);
-            } else {
-                self.enc_buf.truncate(0);
             }
         }
 
@@ -118,15 +128,13 @@ impl<W: io::Write> io::Write for Writer<W> {
                 written += chunk.len();
                 break;
             }
+
             self.enc_buf.push_all(encrypt_chunk(&self.key, &mut self.prev, chunk));
             written += 8;
-            let n = try!(self.sink.write(&self.enc_buf));
-            if n < 8 {
-                let rest = self.enc_buf.split_off(n);
-                self.enc_buf = rest;
+
+            if !try!(self.flush_enc_buf()) {
                 return Ok(written);
             }
-            self.enc_buf.truncate(0);
         }
 
         Ok(written)
@@ -138,6 +146,8 @@ impl<W: io::Write> io::Write for Writer<W> {
     /// full block before they can be encrypted, it is an error to try
     /// to call `flush()`.
     fn flush(&mut self) -> io::Result<()> {
+        try!(self.flush_enc_buf());
+
         if self.buf.is_empty() {
             self.sink.flush()
         } else {
