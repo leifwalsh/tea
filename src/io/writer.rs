@@ -111,6 +111,11 @@ impl<W: io::Write> io::Write for Writer<W> {
 
         if !self.buf.is_empty() {
             let remaining = 8 - self.buf.len();
+            if buf.len() < remaining {
+                self.buf.push_all(buf);
+                return Ok(buf.len());
+            }
+
             self.buf.push_all(&buf[..remaining]);
             written += remaining;
 
@@ -162,14 +167,16 @@ impl<W: io::Write> io::Write for Writer<W> {
 fn it_works() {
     use std::io::Write;
 
-    let input: Vec<u8> = (0u8..128).collect();
-    let mut writer = Writer::new(io::Cursor::new(Vec::with_capacity(128)),
-                                 [1, 2, 3, 4], [5, 6]);
-    for chunk in input.chunks(16) {
-        assert_eq!(writer.write(chunk).ok().unwrap(), 16);
-    }
+    for chunk_size in 1..65 {
+        let input: Vec<u8> = (0u8..128).collect();
+        let mut writer = Writer::new(io::Cursor::new(Vec::with_capacity(128)),
+                                     [1, 2, 3, 4], [5, 6]);
+        for chunk in input.chunks(chunk_size) {
+            assert_eq!(writer.write(chunk).ok().unwrap(), chunk.len());
+        }
 
-    let result = writer.close().ok().unwrap().into_inner();
-    assert!(result.len() == input.len() + 8);
-    assert!(result != input)
+        let result = writer.close().ok().unwrap().into_inner();
+        assert!(result.len() == input.len() + 8);
+        assert!(result != input)
+    }
 }

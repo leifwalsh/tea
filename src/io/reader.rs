@@ -112,20 +112,22 @@ fn it_works() {
     use std::io::{Read, Write};
     use super::Writer;
 
-    let input: Vec<u8> = (0u8..128).collect();
-    let mut writer = Writer::new(io::Cursor::new(Vec::with_capacity(128)),
-                                 [1, 2, 3, 4], [5, 6]);
-    for chunk in input.chunks(16) {
-        assert_eq!(writer.write(chunk).ok().unwrap(), 16);
+    for chunk_size in 1..65 {
+        let input: Vec<u8> = (0u8..128).collect();
+        let mut writer = Writer::new(io::Cursor::new(Vec::with_capacity(128)),
+                                     [1, 2, 3, 4], [5, 6]);
+        for chunk in input.chunks(chunk_size) {
+            assert_eq!(writer.write(chunk).ok().unwrap(), chunk.len());
+        }
+
+        let crypted = writer.close().ok().unwrap().into_inner();
+        assert!(crypted.len() == input.len() + 8);
+        assert!(crypted != input);
+
+        let mut reader = Reader::new(io::Cursor::new(crypted),
+                                     [1, 2, 3, 4], [5, 6]);
+        let mut decrypted: Vec<u8> = Vec::new();
+        assert!(reader.read_to_end(&mut decrypted).is_ok());
+        assert_eq!(decrypted, input);
     }
-
-    let crypted = writer.close().ok().unwrap().into_inner();
-    assert!(crypted.len() == input.len() + 8);
-    assert!(crypted != input);
-
-    let mut reader = Reader::new(io::Cursor::new(crypted),
-                                 [1, 2, 3, 4], [5, 6]);
-    let mut decrypted: Vec<u8> = Vec::new();
-    assert!(reader.read_to_end(&mut decrypted).is_ok());
-    assert_eq!(decrypted, input);
 }
