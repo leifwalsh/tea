@@ -35,6 +35,7 @@ pub struct Writer<W: io::Write> {
     key: Key,
     prev: Block,
     buf: Vec<u8>,
+    enc_buf: Vec<u8>,
 }
 
 impl<W: io::Write> Writer<W> {
@@ -47,6 +48,7 @@ impl<W: io::Write> Writer<W> {
             key: key,
             prev: iv,
             buf: Vec::with_capacity(8),
+            enc_buf: Vec::with_capacity(8),
         }
     }
 
@@ -75,6 +77,17 @@ impl<W: io::Write> io::Write for Writer<W> {
     /// multiple of 8 bytes available, the remaining ones will be
     /// cached until more data is written or the `Writer` is closed.
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        if !self.enc_buf.is_empty() {
+            let n = try!(self.sink.write(&self.enc_buf));
+            if n < self.enc_buf.len() {
+                let rest = self.enc_buf.split_off(n);
+                self.enc_buf = rest;
+                return Ok(0);
+            } else {
+                self.enc_buf.truncate(0);
+            }
+        }
+
         if buf.is_empty() {
             return Ok(0);
         }
@@ -84,12 +97,19 @@ impl<W: io::Write> io::Write for Writer<W> {
         if !self.buf.is_empty() {
             let remaining = 8 - self.buf.len();
             self.buf.push_all(&buf[..remaining]);
-            let n = try!(self.sink.write(encrypt_chunk(&self.key, &mut self.prev, &self.buf)));
-            if n < 8 {
-                panic!("only wrote {} bytes to sink, not caching encrypted bytes so we have to die for now", n);
-            }
             written += remaining;
+
+            self.enc_buf.push_all(encrypt_chunk(&self.key, &mut self.prev, &self.buf));
             self.buf.truncate(0);
+
+            let n = try!(self.sink.write(&self.enc_buf));
+            if n < 8 {
+                let rest = self.enc_buf.split_off(n);
+                self.enc_buf = rest;
+                return Ok(written);
+            } else {
+                self.enc_buf.truncate(0);
+            }
         }
 
         for chunk in buf[written..].chunks(8) {
@@ -98,11 +118,15 @@ impl<W: io::Write> io::Write for Writer<W> {
                 written += chunk.len();
                 break;
             }
-            let n = try!(self.sink.write(encrypt_chunk(&self.key, &mut self.prev, chunk)));
-            if n < 8 {
-                panic!("only wrote {} bytes to sink, not caching encrypted bytes so we have to die for now", n);
-            }
+            self.enc_buf.push_all(encrypt_chunk(&self.key, &mut self.prev, chunk));
             written += 8;
+            let n = try!(self.sink.write(&self.enc_buf));
+            if n < 8 {
+                let rest = self.enc_buf.split_off(n);
+                self.enc_buf = rest;
+                return Ok(written);
+            }
+            self.enc_buf.truncate(0);
         }
 
         Ok(written)
