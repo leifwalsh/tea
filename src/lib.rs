@@ -1,4 +1,4 @@
-#![feature(collections,io)]
+#![feature(collections,core,io)]
 
 //! Implements the XTEA block cipher, whose reference source is public
 //! domain.  This code is also public domain.
